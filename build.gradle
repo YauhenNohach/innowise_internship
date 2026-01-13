@@ -1,0 +1,55 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.3' apply false
+    id 'io.spring.dependency-management' version '1.1.5'
+    id "com.diffplug.spotless" version "6.25.0"
+    id 'java'
+    id "jacoco"
+    id "org.sonarqube" version "7.0.1.6134"
+}
+
+allprojects {
+    group = 'com.innowise'
+    version = '1.0.0'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'jacoco'
+    apply plugin: 'com.diffplug.spotless'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.0"
+        }
+    }
+
+    dependencies {
+        implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+        implementation 'org.projectlombok:lombok:1.18.30'
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+    }
+
+    spotless {
+        java { googleJavaFormat() }
+    }
+
+    tasks.test { useJUnitPlatform() }
+}
