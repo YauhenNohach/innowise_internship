@@ -41,7 +41,7 @@ public class CardController implements CardControllerApi {
   }
 
   @Override
-  public ResponseEntity<PaymentCardDto> getCardById(@PathVariable Long id) {
+  public ResponseEntity<PaymentCardDto> getCardById(@PathVariable("id") Long id) {
     log.info("Fetching card with ID: {}", id);
     PaymentCard card = cardService.getCardById(id);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(card);
@@ -70,7 +70,7 @@ public class CardController implements CardControllerApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteCard(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteCard(@PathVariable("id") Long id) {
     log.info("Deleting card with ID: {}", id);
     cardService.deleteCard(id);
     log.info("Card deleted successfully with ID: {}", id);
@@ -78,7 +78,7 @@ public class CardController implements CardControllerApi {
   }
 
   @Override
-  public ResponseEntity<PaymentCardDto> activateCard(@PathVariable Long id) {
+  public ResponseEntity<PaymentCardDto> activateCard(@PathVariable("id") Long id) {
     log.info("Activating card with ID: {}", id);
     PaymentCard activatedCard = cardService.activateCard(id);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(activatedCard);
@@ -87,7 +87,7 @@ public class CardController implements CardControllerApi {
   }
 
   @Override
-  public ResponseEntity<PaymentCardDto> deactivateCard(@PathVariable Long id) {
+  public ResponseEntity<PaymentCardDto> deactivateCard(@PathVariable("id") Long id) {
     log.info("Deactivating card with ID: {}", id);
     PaymentCard deactivatedCard = cardService.deactivateCard(id);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(deactivatedCard);

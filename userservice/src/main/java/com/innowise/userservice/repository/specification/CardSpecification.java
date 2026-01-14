@@ -18,6 +18,6 @@ public class CardSpecification {
   }
 
   public static Specification<PaymentCard> filterByActive(Boolean active) {
-    return equal("active", active);
+    return hasField("active", active);
   }
 }

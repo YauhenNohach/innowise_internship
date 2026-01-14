@@ -44,7 +44,7 @@ public class UserController implements UserControllerApi {
   }
 
   @Override
-  public ResponseEntity<UserWithCardsDto> getUserById(@PathVariable Long id) {
+  public ResponseEntity<UserWithCardsDto> getUserById(@PathVariable("id") Long id) {
     log.info("Fetching user with ID: {}", id);
     UserWithCardsDto user = userService.getUserWithCardsById(id);
     log.info("User fetched successfully with ID: {}", id);
@@ -96,7 +96,8 @@ public class UserController implements UserControllerApi {
   }
 
   @Override
-  public ResponseEntity<List<PaymentCardDto>> getCardsByUserId(@PathVariable Long userId) {
+  public ResponseEntity<List<PaymentCardDto>> getCardsByUserId(
+      @PathVariable("userId") Long userId) {
     log.info("Fetching cards for user ID: {}", userId);
     List<PaymentCard> cards = cardService.getCardsByUserId(userId);
     List<PaymentCardDto> responseDtos = cards.stream().map(cardMapper::cardToCardDto).toList();
@@ -105,7 +106,7 @@ public class UserController implements UserControllerApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+  public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
     log.info("Deleting user with ID: {}", id);
     userService.deleteUser(id);
     log.info("User deleted successfully with ID: {}", id);
@@ -113,7 +114,7 @@ public class UserController implements UserControllerApi {
   }
 
   @Override
-  public ResponseEntity<UserDto> activateUser(@PathVariable Long id) {
+  public ResponseEntity<UserDto> activateUser(@PathVariable("id") Long id) {
     log.info("Activating user with ID: {}", id);
     userService.activateUser(id);
     User user = userService.getUserById(id);
@@ -123,7 +124,7 @@ public class UserController implements UserControllerApi {
   }
 
   @Override
-  public ResponseEntity<UserDto> deactivateUser(@PathVariable Long id) {
+  public ResponseEntity<UserDto> deactivateUser(@PathVariable("id") Long id) {
     log.info("Deactivating user with ID: {}", id);
     userService.deactivateUser(id);
     User user = userService.getUserById(id);

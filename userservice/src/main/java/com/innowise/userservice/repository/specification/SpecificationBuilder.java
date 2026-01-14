@@ -15,7 +15,7 @@ public class SpecificationBuilder {
     };
   }
 
-  public static <T> Specification<T> equal(String field, Object value) {
+  public static <T> Specification<T> hasField(String field, Object value) {
     return (root, query, cb) -> {
       if (value == null) {
         return cb.conjunction();
