@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class UserControllerIntegrationTest extends BaseIntegrationTest {
+class UserControllerIntegrationTest extends BaseIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 
@@ -38,7 +38,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
   private User user;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     user = new User();
     user.setName("test");
     user.setSurname("test");
@@ -48,7 +48,7 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @AfterEach
-  public void tearDown() {
+  void tearDown() {
     userRepository.deleteAll();
   }
 

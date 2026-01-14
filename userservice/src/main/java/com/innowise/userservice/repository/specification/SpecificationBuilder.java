@@ -5,6 +5,10 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class SpecificationBuilder {
 
+  private SpecificationBuilder() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static <T> Specification<T> likeIgnoreCase(String field, String value) {
     return (root, query, cb) -> {
       if (value == null || value.trim().isEmpty()) {

@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -41,22 +40,18 @@ public class CardController {
   private final PaymentCardMapper cardMapper;
 
   @Operation(summary = "Get all by filters", description = "Returns payment card information")
-  @ApiResponses({
-    @ApiResponse(
-        responseCode = "200",
-        description = "Cards found",
-        content =
-            @Content(
-                mediaType = "application/json",
-                array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class)))),
-    @ApiResponse(
-        responseCode = "404",
-        description = "Cards not found",
-        content =
-            @Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = String.class)))
-  })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Cards found",
+      content =
+          @Content(
+              mediaType = "application/json",
+              array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class))))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Cards not found",
+      content =
+          @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
   @GetMapping
   public ResponseEntity<Page<PaymentCardDto>> getAllCardsWithFilters(
       @RequestParam(required = false) String holder,
@@ -70,17 +65,14 @@ public class CardController {
   }
 
   @Operation(summary = "Get card by ID", description = "Returns payment card information by ID")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Card found",
-            content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(schema = @Schema(implementation = String.class)))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Card found",
+      content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @GetMapping("/{id}")
   public ResponseEntity<PaymentCardDto> getCardById(
       @Parameter(description = "ID of the card to retrieve", required = true) @PathVariable("id")
@@ -94,15 +86,11 @@ public class CardController {
   }
 
   @Operation(summary = "Get all cards", description = "Returns all payment cards in the system")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "All cards retrieved successfully",
-            content =
-                @Content(
-                    array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class))))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "All cards retrieved successfully",
+      content =
+          @Content(array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class))))
   @GetMapping("/all")
   public ResponseEntity<List<PaymentCardDto>> getAllCards() {
 
@@ -114,21 +102,18 @@ public class CardController {
   }
 
   @Operation(summary = "Update card", description = "Updates payment card information by ID")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Card updated successfully",
-            content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(schema = @Schema(implementation = String.class))),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid card data",
-            content = @Content(schema = @Schema(implementation = String.class)))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Card updated successfully",
+      content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(schema = @Schema(implementation = String.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "Invalid card data",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @PutMapping("/{id}")
   public ResponseEntity<PaymentCardDto> updateCard(
       @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")
@@ -145,14 +130,11 @@ public class CardController {
   }
 
   @Operation(summary = "Delete card", description = "Deletes payment card by ID")
-  @ApiResponses(
-      value = {
-        @ApiResponse(responseCode = "204", description = "Card deleted successfully"),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(schema = @Schema(implementation = String.class)))
-      })
+  @ApiResponse(responseCode = "204", description = "Card deleted successfully")
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> deleteCard(
       @Parameter(description = "ID of the card to delete", required = true) @PathVariable("id")
@@ -165,17 +147,14 @@ public class CardController {
   }
 
   @Operation(summary = "Activate card", description = "Activates a payment card by its ID")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Card activated successfully",
-            content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(schema = @Schema(implementation = String.class)))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Card activated successfully",
+      content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @PatchMapping("/{id}/activate")
   public ResponseEntity<PaymentCardDto> activateCard(
       @Parameter(description = "ID of the card to activate", required = true) @PathVariable("id")
@@ -189,17 +168,14 @@ public class CardController {
   }
 
   @Operation(summary = "Deactivate card", description = "Deactivates a payment card by its ID")
-  @ApiResponses(
-      value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Card deactivated successfully",
-            content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Card not found",
-            content = @Content(schema = @Schema(implementation = String.class)))
-      })
+  @ApiResponse(
+      responseCode = "200",
+      description = "Card deactivated successfully",
+      content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
+  @ApiResponse(
+      responseCode = "404",
+      description = "Card not found",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @PatchMapping("/{id}/deactivate")
   public ResponseEntity<PaymentCardDto> deactivateCard(
       @Parameter(description = "ID of the card to deactivate", required = true) @PathVariable("id")

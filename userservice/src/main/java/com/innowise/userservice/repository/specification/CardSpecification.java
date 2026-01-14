@@ -7,6 +7,10 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class CardSpecification {
 
+  private CardSpecification() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static Specification<PaymentCard> filterByHolderAndNumber(String holder, String number) {
     return Specification.<PaymentCard>where(null)
         .and(likeIgnoreCase("holder", holder))

@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class CardControllerIntegrationTest extends BaseIntegrationTest {
+class CardControllerIntegrationTest extends BaseIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 
@@ -44,7 +44,7 @@ public class CardControllerIntegrationTest extends BaseIntegrationTest {
   private PaymentCard card;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     user = new User();
     user.setName("test");
     user.setSurname("test");
@@ -61,7 +61,7 @@ public class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @AfterEach
-  public void tearDown() {
+  void tearDown() {
     cardRepository.deleteAll();
     userRepository.deleteAll();
   }

@@ -33,7 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 @ExtendWith(MockitoExtension.class)
-public class CardServiceImplTest {
+class CardServiceImplTest {
 
   @Mock private PaymentCardRepository cardRepository;
 
