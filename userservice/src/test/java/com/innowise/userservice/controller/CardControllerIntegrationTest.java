@@ -1,0 +1,218 @@
+package com.innowise.userservice.controller;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.innowise.userservice.BaseIntegrationTest;
+import com.innowise.userservice.model.dto.PaymentCardDto;
+import com.innowise.userservice.model.entity.PaymentCard;
+import com.innowise.userservice.model.entity.User;
+import com.innowise.userservice.repository.PaymentCardRepository;
+import com.innowise.userservice.repository.UserRepository;
+import java.time.LocalDate;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+public class CardControllerIntegrationTest extends BaseIntegrationTest {
+
+  @Autowired private MockMvc mockMvc;
+
+  @Autowired private UserRepository userRepository;
+
+  @Autowired private PaymentCardRepository cardRepository;
+
+  @Autowired private ObjectMapper objectMapper;
+
+  private User user;
+  private PaymentCard card;
+
+  @BeforeEach
+  public void setUp() {
+    user = new User();
+    user.setName("test");
+    user.setSurname("test");
+    user.setBirthDate(LocalDate.of(2026, 1, 1));
+    user.setEmail("test@mail.ru");
+    user = userRepository.save(user);
+
+    card = new PaymentCard();
+    card.setUser(user);
+    card.setNumber("1111222233334444");
+    card.setHolder("test test");
+    card.setExpirationDate("1/26");
+    card = cardRepository.save(card);
+  }
+
+  @AfterEach
+  public void tearDown() {
+    cardRepository.deleteAll();
+    userRepository.deleteAll();
+  }
+
+  @Test
+  void createCard_whenValidCard_shouldReturnCreated() throws Exception {
+    PaymentCardDto cardDto = new PaymentCardDto();
+    cardDto.setNumber("5555666677778888");
+    cardDto.setHolder("test test");
+    cardDto.setExpirationDate("01/26");
+    cardDto.setActive(true);
+
+    mockMvc
+        .perform(
+            post("/api/v1/users/{userId}/cards", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cardDto)))
+        .andDo(print())
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.number").value("5555666677778888"));
+  }
+
+  @Test
+  void createCard_whenUserAlreadyHas5Cards_shouldReturnBadRequest() throws Exception {
+    for (int i = 2; i <= 5; i++) {
+      PaymentCard additionalCard = new PaymentCard();
+      additionalCard.setUser(user);
+      additionalCard.setNumber("111122223333444" + i);
+      additionalCard.setHolder("holder" + i);
+      additionalCard.setExpirationDate("01/26");
+      additionalCard.setActive(true);
+      cardRepository.save(additionalCard);
+    }
+
+    PaymentCardDto cardDto = new PaymentCardDto();
+    cardDto.setNumber("9999888877776666");
+    cardDto.setHolder("test test");
+    cardDto.setExpirationDate("01/26");
+    cardDto.setActive(true);
+
+    mockMvc
+        .perform(
+            post("/api/v1/users/{userId}/cards", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cardDto)))
+        .andDo(print())
+        .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void getCardById_whenCardExists_shouldReturnCard() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/cards/{id}", card.getId()))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(card.getId()))
+        .andExpect(jsonPath("$.number").value("1111222233334444"));
+  }
+
+  @Test
+  void getCardsByUserId_shouldReturnListOfCards() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/users/{userId}/cards", user.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].id").value(card.getId()));
+  }
+
+  @Test
+  void updateCard_whenValidUpdate_shouldReturnOk() throws Exception {
+    PaymentCardDto cardDto = new PaymentCardDto();
+    cardDto.setHolder("test test");
+    cardDto.setNumber("1111222233334444");
+    cardDto.setExpirationDate("01/26");
+    cardDto.setActive(true);
+
+    mockMvc
+        .perform(
+            put("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cardDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.holder").value("test test"));
+  }
+
+  @Test
+  void deleteCard_shouldReturnNoContent() throws Exception {
+    mockMvc.perform(delete("/api/v1/cards/{id}", card.getId())).andExpect(status().isNoContent());
+  }
+
+  @Test
+  void activateCard_shouldReturnOk() throws Exception {
+    mockMvc.perform(patch("/api/v1/cards/{id}/activate", card.getId())).andExpect(status().isOk());
+  }
+
+  @Test
+  void deactivateCard_shouldReturnOk() throws Exception {
+    mockMvc
+        .perform(patch("/api/v1/cards/{id}/deactivate", card.getId()))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void getAllCardsWithFilters_shouldReturnFilteredCards() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/cards").param("holder", "test"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].holder").value("test test"));
+  }
+
+  @Test
+  void getAllCardsWithFilters_byNumber_shouldReturnFilteredCards() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/cards").param("number", "4444"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1));
+  }
+
+  @Test
+  void getAllCardsWithFilters_byActiveStatus_shouldReturnFilteredCards() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/cards").param("active", "true"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(1))
+        .andExpect(jsonPath("$.content[0].active").value(true));
+  }
+
+  @Test
+  void getAllCardsWithPagination_shouldReturnPagedResults() throws Exception {
+    for (int i = 2; i <= 3; i++) {
+      User additionalUser = new User();
+      additionalUser.setName("user" + i);
+      additionalUser.setSurname("surname" + i);
+      additionalUser.setBirthDate(LocalDate.of(1990, 1, i));
+      additionalUser.setEmail("user" + i + "@mail.ru");
+      additionalUser = userRepository.save(additionalUser);
+
+      PaymentCard additionalCard = new PaymentCard();
+      additionalCard.setUser(additionalUser);
+      additionalCard.setNumber("111122223333444" + i);
+      additionalCard.setHolder("holder" + i);
+      additionalCard.setExpirationDate("01/26");
+      cardRepository.save(additionalCard);
+    }
+
+    mockMvc
+        .perform(get("/api/v1/cards").param("page", "0").param("size", "2"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.content.length()").value(2))
+        .andExpect(jsonPath("$.totalElements").value(3))
+        .andExpect(jsonPath("$.numberOfElements").value(2));
+  }
+}
