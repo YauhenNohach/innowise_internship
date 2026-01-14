@@ -52,20 +52,20 @@ public class UserController {
 
   @Operation(summary = "Create new user", description = "Creates a new user in the system")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "201",
-                          description = "User successfully created",
-                          content = @Content(schema = @Schema(implementation = UserDto.class))),
-                  @ApiResponse(
-                          responseCode = "400",
-                          description = "Invalid user data",
-                          content = @Content(schema = @Schema(implementation = String.class))),
-                  @ApiResponse(
-                          responseCode = "409",
-                          description = "User with this email already exists",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "User successfully created",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid user data",
+            content = @Content(schema = @Schema(implementation = String.class))),
+        @ApiResponse(
+            responseCode = "409",
+            description = "User with this email already exists",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @PostMapping
   public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
     log.info("Creating user with email: {}", userDto.getEmail());
@@ -78,20 +78,20 @@ public class UserController {
 
   @Operation(summary = "Get user by ID", description = "Returns user information by ID")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "User found",
-                          content = @Content(schema = @Schema(implementation = UserWithCardsDto.class))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "User found",
+            content = @Content(schema = @Schema(implementation = UserWithCardsDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @GetMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<UserWithCardsDto> getUserById(
-          @Parameter(description = "ID of the user to retrieve", required = true)
-          @PathVariable("id") Long id) {
+      @Parameter(description = "ID of the user to retrieve", required = true) @PathVariable("id")
+          Long id) {
 
     log.info("Fetching user with ID: {}", id);
     UserWithCardsDto user = userService.getUserWithCardsById(id);
@@ -101,23 +101,27 @@ public class UserController {
 
   @Operation(summary = "Get all users", description = "Returns paginated list of users")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "Users retrieved successfully",
-                          content = @Content(schema = @Schema(implementation = Page.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Users retrieved successfully",
+            content = @Content(schema = @Schema(implementation = Page.class)))
+      })
   @GetMapping
   public ResponseEntity<Page<UserDto>> getAllUsers(
-          @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
-          @Parameter(description = "Filter by surname") @RequestParam(required = false) String surname,
-          @Parameter(description = "Filter by email") @RequestParam(required = false) String email,
-          @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean active,
-          @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
+      @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
+      @Parameter(description = "Filter by surname") @RequestParam(required = false) String surname,
+      @Parameter(description = "Filter by email") @RequestParam(required = false) String email,
+      @Parameter(description = "Filter by active status") @RequestParam(required = false)
+          Boolean active,
+      @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
 
     log.info(
-            "Fetching users with filters - name: {}, surname: {}, email: {}, active: {}",
-            name, surname, email, active);
+        "Fetching users with filters - name: {}, surname: {}, email: {}, active: {}",
+        name,
+        surname,
+        email,
+        active);
 
     Page<User> users = userService.getAllUsers(name, surname, pageable);
     Page<UserDto> userDtos = users.map(userMapper::userToUserDto);
@@ -128,26 +132,26 @@ public class UserController {
 
   @Operation(summary = "Update user", description = "Updates user information by ID")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "User updated successfully",
-                          content = @Content(schema = @Schema(implementation = UserDto.class))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class))),
-                  @ApiResponse(
-                          responseCode = "400",
-                          description = "Invalid user data",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "User updated successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid user data",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @PutMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<UserDto> updateUser(
-          @Parameter(description = "ID of the user to update", required = true)
-          @PathVariable("id") Long id,
-          @Parameter(description = "Updated user data", required = true)
-          @Valid @RequestBody UserDto userDto) {
+      @Parameter(description = "ID of the user to update", required = true) @PathVariable("id")
+          Long id,
+      @Parameter(description = "Updated user data", required = true) @Valid @RequestBody
+          UserDto userDto) {
 
     log.info("Updating user with ID: {}", id);
     User user = userMapper.userDtoToUser(userDto);
@@ -158,29 +162,30 @@ public class UserController {
   }
 
   @Operation(
-          summary = "Create payment card for user",
-          description = "Creates a new payment card for specified user")
+      summary = "Create payment card for user",
+      description = "Creates a new payment card for specified user")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "201",
-                          description = "Card successfully created",
-                          content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
-                  @ApiResponse(
-                          responseCode = "400",
-                          description = "Invalid card data",
-                          content = @Content(schema = @Schema(implementation = String.class))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Card successfully created",
+            content = @Content(schema = @Schema(implementation = PaymentCardDto.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid card data",
+            content = @Content(schema = @Schema(implementation = String.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @PostMapping(ApiConstant.USER_CARDS_OPERATIONS)
   public ResponseEntity<PaymentCardDto> createCard(
-          @Parameter(description = "ID of the user to create a card for", required = true)
-          @PathVariable("userId") Long userId,
-          @Parameter(description = "Card data", required = true)
-          @Valid @RequestBody PaymentCardDto cardDto) {
+      @Parameter(description = "ID of the user to create a card for", required = true)
+          @PathVariable("userId")
+          Long userId,
+      @Parameter(description = "Card data", required = true) @Valid @RequestBody
+          PaymentCardDto cardDto) {
 
     log.info("Creating card for user ID: {}", userId);
     PaymentCard card = cardMapper.cardDtoToCard(cardDto);
@@ -191,46 +196,47 @@ public class UserController {
   }
 
   @Operation(
-          summary = "Get cards by user ID",
-          description = "Retrieves all payment cards for a specific user")
+      summary = "Get cards by user ID",
+      description = "Retrieves all payment cards for a specific user")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "Cards successfully retrieved",
-                          content = @Content(array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class)))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Cards successfully retrieved",
+            content =
+                @Content(
+                    array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class)))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @GetMapping(ApiConstant.USER_CARDS_OPERATIONS)
   public ResponseEntity<List<PaymentCardDto>> getCardsByUserId(
-          @Parameter(description = "ID of the user to retrieve cards for", required = true)
-          @PathVariable("userId") Long userId) {
+      @Parameter(description = "ID of the user to retrieve cards for", required = true)
+          @PathVariable("userId")
+          Long userId) {
 
     log.info("Fetching cards for user ID: {}", userId);
     List<PaymentCard> cards = cardService.getCardsByUserId(userId);
-    List<PaymentCardDto> responseDtos = cards.stream()
-            .map(cardMapper::cardToCardDto)
-            .toList();
+    List<PaymentCardDto> responseDtos = cards.stream().map(cardMapper::cardToCardDto).toList();
     log.info("Found {} cards for user ID: {}", responseDtos.size(), userId);
     return ResponseEntity.ok(responseDtos);
   }
 
   @Operation(summary = "Delete user", description = "Deletes user by ID")
   @ApiResponses(
-          value = {
-                  @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @DeleteMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<Void> deleteUser(
-          @Parameter(description = "ID of the user to delete", required = true)
-          @PathVariable("id") Long id) {
+      @Parameter(description = "ID of the user to delete", required = true) @PathVariable("id")
+          Long id) {
 
     log.info("Deleting user with ID: {}", id);
     userService.deleteUser(id);
@@ -240,20 +246,20 @@ public class UserController {
 
   @Operation(summary = "Activate user", description = "Activates user account by ID")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "User activated successfully",
-                          content = @Content(schema = @Schema(implementation = UserDto.class))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "User activated successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @PatchMapping(ApiConstant.ACTIVATE_USER)
   public ResponseEntity<UserDto> activateUser(
-          @Parameter(description = "ID of the user to activate", required = true)
-          @PathVariable("id") Long id) {
+      @Parameter(description = "ID of the user to activate", required = true) @PathVariable("id")
+          Long id) {
 
     log.info("Activating user with ID: {}", id);
     userService.activateUser(id);
@@ -265,20 +271,20 @@ public class UserController {
 
   @Operation(summary = "Deactivate user", description = "Deactivates user account by ID")
   @ApiResponses(
-          value = {
-                  @ApiResponse(
-                          responseCode = "200",
-                          description = "User deactivated successfully",
-                          content = @Content(schema = @Schema(implementation = UserDto.class))),
-                  @ApiResponse(
-                          responseCode = "404",
-                          description = "User not found",
-                          content = @Content(schema = @Schema(implementation = String.class)))
-          })
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "User deactivated successfully",
+            content = @Content(schema = @Schema(implementation = UserDto.class))),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(schema = @Schema(implementation = String.class)))
+      })
   @PatchMapping(ApiConstant.DEACTIVATE_USER)
   public ResponseEntity<UserDto> deactivateUser(
-          @Parameter(description = "ID of the user to deactivate", required = true)
-          @PathVariable("id") Long id) {
+      @Parameter(description = "ID of the user to deactivate", required = true) @PathVariable("id")
+          Long id) {
 
     log.info("Deactivating user with ID: {}", id);
     userService.deactivateUser(id);
