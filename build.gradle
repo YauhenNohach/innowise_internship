@@ -54,3 +54,31 @@ subprojects {
     tasks.test { useJUnitPlatform() }
 }
 
+task jacocoRootReport(type: JacocoReport) {
+    group = 'Reporting'
+    description = 'Generates an aggregate report from all subprojects'
+
+    dependsOn = subprojects.test
+
+    additionalSourceDirs.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+    sourceDirectories.from = files(subprojects.sourceSets.main.allSource.srcDirs)
+    classDirectories.from = files(subprojects.sourceSets.main.output)
+    executionData.from = files(subprojects.jacocoTestReport.executionData)
+
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+    }
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/com/innowise/**/config/**',
+                    '**/com/innowise/**/dto/**',
+                    '**/com/innowise/**/model/**',
+                    '**/*Application.*'
+            ])
+        }))
+    }
+}
