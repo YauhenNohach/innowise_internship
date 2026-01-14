@@ -2,9 +2,9 @@ name: Gradle CI/CD Pipeline
 
 on:
   push:
-    branches: [ "dev", "main" ]
+    branches: [ "tasks/USR-0", "main" ]
   pull_request:
-    branches: [ "dev", "main" ]
+    branches: [ "tasks/USR-0", "main" ]
 
 jobs:
 
@@ -16,13 +16,23 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
         ports:
-          - 5434:5432
+          - 5439:5432
         options: >-
           --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
@@ -42,12 +52,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build project
+      - name: Build project (without tests)
         run: ./gradlew clean build -x test
 
       - name: Run tests and coverage
         run: |
-          find . -name "*Tests.java" -type f -delete || true
           ./gradlew test jacocoTestReport
 
       - name: SonarCloud Scan
@@ -88,10 +97,9 @@ jobs:
 
       - name: Build and push Docker images (dev)
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/user-service:dev-latest -t ${{ secrets.DOCKER_USERNAME }}/user-service:${{ github.sha }} -f user-service/Dockerfile .
-          docker push ${{ secrets.DOCKER_USERNAME }}/user-service:dev-latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/user-service:${{ github.sha }}
-
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/userservice:dev-latest -t ${{ secrets.DOCKER_USERNAME }}/userservice:${{ github.sha }} -f userservice/Dockerfile .
+          docker push ${{ secrets.DOCKER_USERNAME }}/userservice:dev-latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/userservice:${{ github.sha }}
 
       - name: Deploy to Dev environment
         run: echo "Deploying to dev environment..."
