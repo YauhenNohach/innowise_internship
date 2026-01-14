@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK 21
-        uses: actions/setup-java@3a4f6111f18e3d08ad74ad0ff28867f85b9ff408
+        uses: actions/setup-java@7a6d8a8234af8eb26422e24e300d5fd53c031dfe
         with:
           distribution: temurin
           java-version: 21
