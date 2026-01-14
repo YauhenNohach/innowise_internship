@@ -27,3 +27,10 @@ dependencies {
     testImplementation 'com.redis.testcontainers:testcontainers-redis:1.6.4'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 }
+
+jacocoTestReport {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
