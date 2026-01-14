@@ -82,3 +82,15 @@ task jacocoRootReport(type: JacocoReport) {
         }))
     }
 }
+
+sonarqube {
+    properties {
+        property "sonar.exclusions", [
+                "**/dto/**",
+                "**/model/**",
+                "**/config/**",
+                "**/*Application.java",
+                "**/exception/**"
+        ].join(",")
+    }
+}
