@@ -2,8 +2,6 @@ plugins {
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
     id 'java'
-    id "jacoco"
-    id "org.sonarqube" version "7.0.1.6134"
 }
 
 repositories {

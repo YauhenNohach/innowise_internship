@@ -1,7 +1,6 @@
 package com.innowise.userservice.model.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,8 +16,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @Schema(description = "User DTO with full information including linked payment cards")
 public class UserWithCardsDto implements Serializable {
-
-  @Serial private static final long serialVersionUID = 1L;
 
   @Schema(
       description = "Unique user identifier",

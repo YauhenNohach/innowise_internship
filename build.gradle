@@ -19,8 +19,9 @@ allprojects {
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
-    apply plugin: 'com.diffplug.spotless'
     apply plugin: 'jacoco'
+    apply plugin: 'com.diffplug.spotless'
+    apply plugin: 'org.sonarqube'
 
     java {
         toolchain {
@@ -36,8 +37,10 @@ subprojects {
 
     dependencies {
         implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
+
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -48,21 +51,6 @@ subprojects {
         java { googleJavaFormat() }
     }
 
-    tasks.test {
-        useJUnitPlatform()
-        finalizedBy jacocoTestReport
-    }
-
-    jacocoTestReport {
-        dependsOn test
-        reports {
-            xml.required = true
-            html.required = true
-            csv.required = false
-        }
-    }
+    tasks.test { useJUnitPlatform() }
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
