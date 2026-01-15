@@ -27,6 +27,7 @@ public class CardServiceImpl implements CardService {
 
   private final PaymentCardRepository cardRepository;
   private final UserRepository userRepository;
+  private static final Integer MAX_CARDS_PER_USER = 5;
 
   @Override
   @CacheEvict(value = "userWithCards", key = "#userId")
@@ -35,7 +36,7 @@ public class CardServiceImpl implements CardService {
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
 
     int activeCardsCount = cardRepository.countActiveCardsByUserId(userId);
-    if (activeCardsCount >= 5) {
+    if (activeCardsCount >= MAX_CARDS_PER_USER) {
       log.warn("User {} already has {} active cards, limit exceeded", userId, activeCardsCount);
       throw new MaxCardsLimitException();
     }
