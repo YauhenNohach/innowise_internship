@@ -1,6 +1,9 @@
 package com.innowise.userservice.repository.specification;
 
-import static com.innowise.userservice.repository.specification.SpecificationBuilder.*;
+import static com.innowise.userservice.repository.specification.SpecificationBuilder.hasField;
+import static com.innowise.userservice.repository.specification.SpecificationBuilder.joinEqual;
+import static com.innowise.userservice.repository.specification.SpecificationBuilder.like;
+import static com.innowise.userservice.repository.specification.SpecificationBuilder.likeIgnoreCase;
 
 import com.innowise.userservice.model.entity.PaymentCard;
 import org.springframework.data.jpa.domain.Specification;

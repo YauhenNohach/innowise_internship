@@ -1,6 +1,6 @@
 package com.innowise.userservice.repository.specification;
 
-import static com.innowise.userservice.repository.specification.SpecificationBuilder.*;
+import static com.innowise.userservice.repository.specification.SpecificationBuilder.likeIgnoreCase;
 
 import com.innowise.userservice.model.entity.User;
 import org.springframework.data.jpa.domain.Specification;
