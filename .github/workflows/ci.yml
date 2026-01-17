@@ -96,8 +96,7 @@ jobs:
           name: jar-artifacts
 
       - name: Login to Docker Hub
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
-
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -107,13 +106,70 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           COMMIT_SHA: ${{ github.sha }}
         run: |
+          # Build and push userservice
           docker build \
             -t $DOCKER_USERNAME/userservice:main-latest \
             -t $DOCKER_USERNAME/userservice:$COMMIT_SHA \
-            -f userservice/Dockerfile .
+            -f userservice/Dockerfile userservice/
           
           docker push $DOCKER_USERNAME/userservice:main-latest
           docker push $DOCKER_USERNAME/userservice:$COMMIT_SHA
 
+          # Build and push authservice
+          docker build \
+            -t $DOCKER_USERNAME/authservice:main-latest \
+            -t $DOCKER_USERNAME/authservice:$COMMIT_SHA \
+            -f authservice/Dockerfile authservice/
+          
+          docker push $DOCKER_USERNAME/authservice:main-latest
+          docker push $DOCKER_USERNAME/authservice:$COMMIT_SHA
+
       - name: Deploy to Main environment
         run: echo "Deploying to main environment..."
+
+  cd-test:
+    name: CD - Test Environment
+    needs: ci-build-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/tasks/USR-0')
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: jar-artifacts
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker images (test)
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          # Build and push userservice for test
+          docker build \
+            -t $DOCKER_USERNAME/userservice:test-latest \
+            -t $DOCKER_USERNAME/userservice:test-$COMMIT_SHA \
+            -f userservice/Dockerfile userservice/
+          
+          docker push $DOCKER_USERNAME/userservice:test-latest
+          docker push $DOCKER_USERNAME/userservice:test-$COMMIT_SHA
+
+          # Build and push authservice for test
+          docker build \
+            -t $DOCKER_USERNAME/authservice:test-latest \
+            -t $DOCKER_USERNAME/authservice:test-$COMMIT_SHA \
+            -f authservice/Dockerfile authservice/
+          
+          docker push $DOCKER_USERNAME/authservice:test-latest
+          docker push $DOCKER_USERNAME/authservice:test-$COMMIT_SHA
+
+      - name: Deploy to Test environment
+        run: echo "Deploying to test environment..."
