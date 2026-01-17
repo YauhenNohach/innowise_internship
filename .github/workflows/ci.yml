@@ -84,7 +84,7 @@ jobs:
     name: CD - Main
     needs: ci-build-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/tasks/USR-0')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/tasks/USR-0' || github.ref == 'refs/heads/tasks/AUTH-0')
 
     steps:
       - name: Checkout source code
@@ -131,7 +131,7 @@ jobs:
     name: CD - Test Environment
     needs: ci-build-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/tasks/USR-0')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/tasks/USR-0') && (github.ref == 'refs/heads/tasks/AUTH-0')
 
     steps:
       - name: Checkout source code
