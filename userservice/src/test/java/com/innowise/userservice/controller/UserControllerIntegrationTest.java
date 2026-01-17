@@ -1,5 +1,7 @@
 package com.innowise.userservice.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -13,6 +15,7 @@ import com.innowise.userservice.BaseIntegrationTest;
 import com.innowise.userservice.model.dto.UserDto;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.AuthorizationService;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +23,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +40,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
   @Autowired private ObjectMapper objectMapper;
 
+  @MockBean(name = "authorizationService")
+  private AuthorizationService authorizationService;
+
   private User user;
 
   @BeforeEach
@@ -45,6 +53,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     user.setBirthDate(LocalDate.of(2000, 1, 1));
     user.setEmail("test@mail.ru");
     user = userRepository.save(user);
+
+    when(authorizationService.hasAdminRole(any())).thenReturn(true);
   }
 
   @AfterEach
@@ -71,7 +81,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getUserById_whenUserExists_shouldReturnUser() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users/{id}", user.getId()))
         .andExpect(status().isOk())
@@ -80,12 +92,16 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getUserById_whenUserDoesNotExist_shouldReturnNotFound() throws Exception {
+
     mockMvc.perform(get("/api/v1/users/{id}", 999L)).andExpect(status().isNotFound());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllUsers_shouldReturnPageOfUsers() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users"))
         .andExpect(status().isOk())
@@ -94,7 +110,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllUsers_withNameFilter_shouldReturnFilteredUsers() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users").param("name", "test"))
         .andExpect(status().isOk())
@@ -103,7 +121,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllUsers_withSurnameFilter_shouldReturnFilteredUsers() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users").param("surname", "test"))
         .andExpect(status().isOk())
@@ -112,7 +132,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllUsers_withBothFilters_shouldReturnFilteredUsers() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users").param("name", "test").param("surname", "test"))
         .andExpect(status().isOk())
@@ -122,7 +144,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllUsers_withNonExistentNameFilter_shouldReturnEmpty() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users").param("name", "nonexistent"))
         .andExpect(status().isOk())
@@ -130,6 +154,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void updateUser_whenValidUpdate_shouldReturnOk() throws Exception {
     UserDto userDto = new UserDto();
     userDto.setName("test");
@@ -148,14 +173,18 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deleteUser_shouldReturnNoContent() throws Exception {
+
     mockMvc.perform(delete("/api/v1/users/{id}", user.getId())).andExpect(status().isNoContent());
 
     mockMvc.perform(get("/api/v1/users/{id}", user.getId())).andExpect(status().isNotFound());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void activateUser_shouldReturnOk() throws Exception {
+
     mockMvc
         .perform(patch("/api/v1/users/{id}/activate", user.getId()))
         .andExpect(status().isOk())
@@ -163,7 +192,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deactivateUser_shouldReturnOk() throws Exception {
+
     mockMvc
         .perform(patch("/api/v1/users/{id}/deactivate", user.getId()))
         .andExpect(status().isOk())

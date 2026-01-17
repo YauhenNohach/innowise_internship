@@ -1,5 +1,7 @@
 package com.innowise.userservice.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -16,6 +18,7 @@ import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.AuthorizationService;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +26,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +44,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   @Autowired private PaymentCardRepository cardRepository;
 
   @Autowired private ObjectMapper objectMapper;
+
+  @MockBean(name = "authorizationService")
+  private AuthorizationService authorizationService;
 
   private User user;
   private PaymentCard card;
@@ -58,6 +66,8 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
     card.setHolder("test test");
     card.setExpirationDate("1/26");
     card = cardRepository.save(card);
+
+    when(authorizationService.hasAdminRole(any())).thenReturn(true);
   }
 
   @AfterEach
@@ -67,6 +77,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void createCard_whenValidCard_shouldReturnCreated() throws Exception {
     PaymentCardDto cardDto = new PaymentCardDto();
     cardDto.setNumber("5555666677778888");
@@ -85,7 +96,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void createCard_whenUserAlreadyHas5Cards_shouldReturnBadRequest() throws Exception {
+
     for (int i = 2; i <= 5; i++) {
       PaymentCard additionalCard = new PaymentCard();
       additionalCard.setUser(user);
@@ -112,7 +125,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getCardById_whenCardExists_shouldReturnCard() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards/{id}", card.getId()))
         .andDo(print())
@@ -122,7 +137,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getCardsByUserId_shouldReturnListOfCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users/{userId}/cards", user.getId()))
         .andExpect(status().isOk())
@@ -131,6 +148,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void updateCard_whenValidUpdate_shouldReturnOk() throws Exception {
     PaymentCardDto cardDto = new PaymentCardDto();
     cardDto.setHolder("test test");
@@ -148,24 +166,32 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deleteCard_shouldReturnNoContent() throws Exception {
+
     mockMvc.perform(delete("/api/v1/cards/{id}", card.getId())).andExpect(status().isNoContent());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void activateCard_shouldReturnOk() throws Exception {
+
     mockMvc.perform(patch("/api/v1/cards/{id}/activate", card.getId())).andExpect(status().isOk());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deactivateCard_shouldReturnOk() throws Exception {
+
     mockMvc
         .perform(patch("/api/v1/cards/{id}/deactivate", card.getId()))
         .andExpect(status().isOk());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("holder", "test"))
         .andExpect(status().isOk())
@@ -174,7 +200,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_byNumber_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("number", "4444"))
         .andExpect(status().isOk())
@@ -182,7 +210,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_byActiveStatus_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("active", "true"))
         .andExpect(status().isOk())
@@ -191,6 +221,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithPagination_shouldReturnPagedResults() throws Exception {
     for (int i = 2; i <= 3; i++) {
       User additionalUser = new User();

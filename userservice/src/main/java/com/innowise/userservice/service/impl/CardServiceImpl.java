@@ -128,4 +128,11 @@ public class CardServiceImpl implements CardService {
     log.debug("Deleting card with id: {} for user: {}", id, userId);
     cardRepository.deleteById(id);
   }
+
+  public boolean isCardOwner(Long cardId, String email) {
+    return cardRepository
+        .findById(cardId)
+        .map(card -> card.getUser().getEmail().equals(email))
+        .orElse(false);
+  }
 }

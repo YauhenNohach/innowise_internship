@@ -2,5 +2,33 @@ spring:
   application:
     name: authservice
 
+  profiles:
+    active: ${SPRING_PROFILE:local}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
 server:
-  port: ${SERVER_PORT:8082}
+  port: 8082

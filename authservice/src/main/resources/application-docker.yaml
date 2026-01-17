@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:auth-db}:${DB_PORT:5432}/${DB_NAME:authdb}
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: ${DB_MINIMUM_IDLE:5}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
+      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
+      max-lifetime: ${DB_MAX_LIFETIME:1800000}
+
+  jpa:
+    show-sql: ${JPA_SHOW_SQL:false}
+    open-in-view: false
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: ${JPA_FORMAT_SQL:false}
+        jdbc:
+          batch_size: ${JPA_BATCH_SIZE:20}
+
+jwt:
+  secret: ${JWT_SECRET:tyzCorporationSecretKeyProduction1234}
+  expiration: 3600000
+  refresh-expiration: 2592000000
+
+server:
+  port: 8082
+
+logging:
+  level:
+    root: INFO

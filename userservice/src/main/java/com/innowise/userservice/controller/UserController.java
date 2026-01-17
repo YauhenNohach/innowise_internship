@@ -26,6 +26,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -81,6 +82,8 @@ public class UserController {
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#id, authentication)")
   @GetMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<UserWithCardsDto> getUserById(
       @Parameter(description = "ID of the user to retrieve", required = true) @PathVariable("id")
@@ -97,6 +100,7 @@ public class UserController {
       responseCode = "200",
       description = "Users retrieved successfully",
       content = @Content(schema = @Schema(implementation = Page.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @GetMapping
   public ResponseEntity<Page<UserDto>> getAllUsers(
       @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
@@ -133,6 +137,8 @@ public class UserController {
       responseCode = "400",
       description = "Invalid user data",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#id, authentication)")
   @PutMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<UserDto> updateUser(
       @Parameter(description = "ID of the user to update", required = true) @PathVariable("id")
@@ -164,6 +170,8 @@ public class UserController {
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
   @PostMapping(ApiConstant.USER_CARDS_OPERATIONS)
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication) or @cardServiceImpl.isCardOwner(#userId, authentication.name)")
   public ResponseEntity<PaymentCardDto> createCard(
       @Parameter(description = "ID of the user to create a card for", required = true)
           @PathVariable("userId")
@@ -192,6 +200,8 @@ public class UserController {
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
   @GetMapping(ApiConstant.USER_CARDS_OPERATIONS)
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication) or @cardServiceImpl.isCardOwner(#userId, authentication.name)")
   public ResponseEntity<List<PaymentCardDto>> getCardsByUserId(
       @Parameter(description = "ID of the user to retrieve cards for", required = true)
           @PathVariable("userId")
@@ -210,6 +220,8 @@ public class UserController {
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication)  or @authorizationService.isSelf(#id, authentication)")
   @DeleteMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<Void> deleteUser(
       @Parameter(description = "ID of the user to delete", required = true) @PathVariable("id")
@@ -230,6 +242,7 @@ public class UserController {
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @PatchMapping(ApiConstant.ACTIVATE_USER)
   public ResponseEntity<UserDto> activateUser(
       @Parameter(description = "ID of the user to activate", required = true) @PathVariable("id")
@@ -252,6 +265,7 @@ public class UserController {
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @PatchMapping(ApiConstant.DEACTIVATE_USER)
   public ResponseEntity<UserDto> deactivateUser(
       @Parameter(description = "ID of the user to deactivate", required = true) @PathVariable("id")

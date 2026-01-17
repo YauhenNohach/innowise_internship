@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: authservice-test
+
+  datasource:
+    url: jdbc:postgresql://localhost:5439/test
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
+    show-sql: true
+    open-in-view: false
+
+logging:
+  level:
+    com.innowise.userservice: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.cache: TRACE
+    root: INFO
+
+jwt:
+  secret: "tyzCorporationSecretKeyProduction1234"
+  expiration: 3600000
+  refresh-expiration: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,caches
+  endpoint:
+    health:
+      show-details: always
