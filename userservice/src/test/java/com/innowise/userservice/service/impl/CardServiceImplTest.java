@@ -45,18 +45,20 @@ class CardServiceImplTest {
   void createCard_whenUserExistsAndCardLimitNotExceeded_shouldReturnCard() {
     User user = new User();
     user.setId(1L);
+
     PaymentCard card = new PaymentCard();
+    card.setExpirationDate("12/30");
 
     when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
     when(cardRepository.countActiveCardsByUserId(anyLong())).thenReturn(4);
     when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
-    PaymentCard createdCard = cardService.createCard(card, 1L);
+    PaymentCard result = cardService.createCard(card, 1L);
 
-    assertNotNull(createdCard);
-    verify(userRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).countActiveCardsByUserId(anyLong());
-    verify(cardRepository, times(1)).save(any(PaymentCard.class));
+    assertNotNull(result);
+    verify(userRepository).findById(1L);
+    verify(cardRepository).countActiveCardsByUserId(1L);
+    verify(cardRepository).save(card);
   }
 
   @Test
@@ -75,15 +77,18 @@ class CardServiceImplTest {
   void createCard_whenCardLimitExceeded_shouldThrowException() {
     User user = new User();
     user.setId(1L);
+
     PaymentCard card = new PaymentCard();
+    card.setExpirationDate("12/30");
 
     when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
     when(cardRepository.countActiveCardsByUserId(anyLong())).thenReturn(5);
 
     assertThrows(MaxCardsLimitException.class, () -> cardService.createCard(card, 1L));
-    verify(userRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).countActiveCardsByUserId(anyLong());
-    verify(cardRepository, never()).save(any(PaymentCard.class));
+
+    verify(userRepository).findById(1L);
+    verify(cardRepository).countActiveCardsByUserId(1L);
+    verify(cardRepository, never()).save(any());
   }
 
   @Test

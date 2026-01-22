@@ -36,7 +36,7 @@ public class PaymentCard extends BaseAuditEntity implements Serializable {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @Column(nullable = false, length = 20)
+  @Column(unique = true, nullable = false, length = 20)
   private String number;
 
   @Column(nullable = false, length = 50)

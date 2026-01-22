@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS payment_cards (
                                id BIGSERIAL PRIMARY KEY,
                                user_id BIGINT NOT NULL,
-                               number VARCHAR(20) NOT NULL,
+                               number VARCHAR(20) NOT NULL unique,
                                holder VARCHAR(255) NOT NULL,
-                               expiration_date VARCHAR(5) NOT NULL, -- Format MM/YY
+                               expiration_date VARCHAR(5) NOT NULL,
                                active BOOLEAN DEFAULT TRUE,
                                created_at TIMESTAMP WITHOUT TIME ZONE,
                                updated_at TIMESTAMP WITHOUT TIME ZONE,

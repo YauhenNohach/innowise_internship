@@ -1,5 +1,6 @@
 package com.innowise.userservice.service.impl;
 
+import com.innowise.userservice.exception.CardExpiredException;
 import com.innowise.userservice.exception.CardNotFoundException;
 import com.innowise.userservice.exception.MaxCardsLimitException;
 import com.innowise.userservice.exception.UserNotFoundException;
@@ -10,6 +11,8 @@ import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.repository.specification.CardSpecification;
 import com.innowise.userservice.service.CardService;
 import jakarta.transaction.Transactional;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +33,14 @@ public class CardServiceImpl implements CardService {
   private static final Integer MAX_CARDS_PER_USER = 5;
 
   @Override
-  @CacheEvict(value = "userWithCards", key = "#userId")
   public PaymentCard createCard(PaymentCard card, Long userId) {
     User user =
         userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
-
+    YearMonth expiry =
+        YearMonth.parse(card.getExpirationDate(), DateTimeFormatter.ofPattern("MM/yy"));
+    if (expiry.isBefore(YearMonth.now())) {
+      throw new CardExpiredException(card.getExpirationDate());
+    }
     int activeCardsCount = cardRepository.countActiveCardsByUserId(userId);
     if (activeCardsCount >= MAX_CARDS_PER_USER) {
       log.warn("User {} already has {} active cards, limit exceeded", userId, activeCardsCount);

@@ -5,7 +5,6 @@ import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.dto.PaymentCardDto;
 import com.innowise.userservice.model.dto.UserDto;
-import com.innowise.userservice.model.dto.UserWithCardsDto;
 import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.service.CardService;
@@ -76,20 +75,21 @@ public class UserController {
   @ApiResponse(
       responseCode = "200",
       description = "User found",
-      content = @Content(schema = @Schema(implementation = UserWithCardsDto.class)))
+      content = @Content(schema = @Schema(implementation = UserDto.class)))
   @ApiResponse(
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
   @GetMapping(ApiConstant.USER_ID_PATH)
-  public ResponseEntity<UserWithCardsDto> getUserById(
+  public ResponseEntity<UserDto> getUserById(
       @Parameter(description = "ID of the user to retrieve", required = true) @PathVariable("id")
           Long id) {
 
     log.info("Fetching user with ID: {}", id);
-    UserWithCardsDto user = userService.getUserWithCardsById(id);
+    User user = userService.getUserById(id);
+    UserDto userDto = userMapper.userToUserDto(user);
     log.info("User fetched successfully with ID: {}", id);
-    return ResponseEntity.ok(user);
+    return ResponseEntity.ok(userDto);
   }
 
   @Operation(summary = "Get all users", description = "Returns paginated list of users")
