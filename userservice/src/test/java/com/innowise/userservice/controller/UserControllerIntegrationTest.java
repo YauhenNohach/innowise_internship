@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.userservice.BaseIntegrationTest;
+import com.innowise.userservice.model.dto.StatusUpdateDto;
 import com.innowise.userservice.model.dto.UserDto;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.UserRepository;
@@ -44,6 +45,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     user.setSurname("test");
     user.setBirthDate(LocalDate.of(2000, 1, 1));
     user.setEmail("test@mail.ru");
+    user.setActive(true);
     user = userRepository.save(user);
   }
 
@@ -155,18 +157,44 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  void activateUser_shouldReturnOk() throws Exception {
+  void updateUserStatus_activateUser_shouldReturnOk() throws Exception {
+    user.setActive(false);
+
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(true);
+
     mockMvc
-        .perform(patch("/api/v1/users/{id}/activate", user.getId()))
+        .perform(
+            patch("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.active").value(true));
   }
 
   @Test
-  void deactivateUser_shouldReturnOk() throws Exception {
+  void updateUserStatus_deactivateUser_shouldReturnOk() throws Exception {
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(false);
+
     mockMvc
-        .perform(patch("/api/v1/users/{id}/deactivate", user.getId()))
+        .perform(
+            patch("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.active").value(false));
+  }
+
+  @Test
+  void updateUserStatus_withInvalidData_shouldReturnBadRequest() throws Exception {
+    String invalidJson = "{}";
+
+    mockMvc
+        .perform(
+            patch("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+        .andExpect(status().isBadRequest());
   }
 }

@@ -1,11 +1,12 @@
 package com.innowise.userservice.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -170,11 +171,12 @@ class CardServiceImplTest {
   void updateCard_whenCardExists_shouldReturnUpdatedCard() {
     PaymentCard existingCard = new PaymentCard();
     existingCard.setId(1L);
+    existingCard.setNumber("1111");
     PaymentCard updatedCard = new PaymentCard();
     updatedCard.setNumber("1234");
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(existingCard));
-    when(cardRepository.save(any(PaymentCard.class))).thenReturn(updatedCard);
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(existingCard);
 
     PaymentCard result = cardService.updateCard(1L, updatedCard);
 
@@ -195,6 +197,53 @@ class CardServiceImplTest {
   }
 
   @Test
+  void updateCardStatus_activateCard_shouldReturnUpdatedCard() {
+    User user = new User();
+    user.setId(1L);
+    PaymentCard card = new PaymentCard();
+    card.setUser(user);
+    card.setActive(false);
+
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
+
+    PaymentCard result = cardService.updateCardStatus(1L, true);
+
+    assertNotNull(result);
+    assertTrue(result.isActive());
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, times(1)).save(card);
+  }
+
+  @Test
+  void updateCardStatus_deactivateCard_shouldReturnUpdatedCard() {
+    User user = new User();
+    user.setId(1L);
+    PaymentCard card = new PaymentCard();
+    card.setUser(user);
+    card.setActive(true);
+
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
+
+    PaymentCard result = cardService.updateCardStatus(1L, false);
+
+    assertNotNull(result);
+    assertFalse(result.isActive());
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, times(1)).save(card);
+  }
+
+  @Test
+  void updateCardStatus_whenCardDoesNotExist_shouldThrowException() {
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThrows(CardNotFoundException.class, () -> cardService.updateCardStatus(1L, true));
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, never()).save(any(PaymentCard.class));
+  }
+
+  @Test
   void activateCard_shouldCallRepository() {
     User user = new User();
     user.setId(1L);
@@ -202,12 +251,12 @@ class CardServiceImplTest {
     card.setUser(user);
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
-    doNothing().when(cardRepository).updateCardStatus(anyLong(), eq(true));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
     cardService.activateCard(1L);
 
     verify(cardRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).updateCardStatus(1L, true);
+    verify(cardRepository, times(1)).save(card);
   }
 
   @Test
@@ -218,12 +267,12 @@ class CardServiceImplTest {
     card.setUser(user);
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
-    doNothing().when(cardRepository).updateCardStatus(anyLong(), eq(false));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
     cardService.deactivateCard(1L);
 
     verify(cardRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).updateCardStatus(1L, false);
+    verify(cardRepository, times(1)).save(card);
   }
 
   @Test

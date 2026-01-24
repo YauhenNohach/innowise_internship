@@ -1,8 +1,8 @@
 package com.innowise.userservice.controller;
 
-import com.innowise.userservice.constant.ApiConstant;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.model.dto.PaymentCardDto;
+import com.innowise.userservice.model.dto.StatusUpdateDto;
 import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,21 +13,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(ApiConstant.CARDS_BASE)
@@ -73,32 +64,14 @@ public class CardController {
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
-  @GetMapping("/{id}")
+  @GetMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<PaymentCardDto> getCardById(
       @Parameter(description = "ID of the card to retrieve", required = true) @PathVariable("id")
           Long id) {
 
-    log.info("Fetching card with ID: {}", id);
     PaymentCard card = cardService.getCardById(id);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(card);
-    log.info("Card fetched successfully with ID: {}", id);
     return ResponseEntity.ok(responseDto);
-  }
-
-  @Operation(summary = "Get all cards", description = "Returns all payment cards in the system")
-  @ApiResponse(
-      responseCode = "200",
-      description = "All cards retrieved successfully",
-      content =
-          @Content(array = @ArraySchema(schema = @Schema(implementation = PaymentCardDto.class))))
-  @GetMapping("/all")
-  public ResponseEntity<List<PaymentCardDto>> getAllCards() {
-
-    log.info("Fetching all cards");
-    List<PaymentCard> cards = cardService.getAllCards();
-    List<PaymentCardDto> responseDtos = cards.stream().map(cardMapper::cardToCardDto).toList();
-    log.info("Found {} total cards", responseDtos.size());
-    return ResponseEntity.ok(responseDtos);
   }
 
   @Operation(summary = "Update card", description = "Updates payment card information by ID")
@@ -114,18 +87,16 @@ public class CardController {
       responseCode = "400",
       description = "Invalid card data",
       content = @Content(schema = @Schema(implementation = String.class)))
-  @PutMapping("/{id}")
+  @PutMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<PaymentCardDto> updateCard(
       @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")
           Long id,
       @Parameter(description = "Updated card data", required = true) @Valid @RequestBody
           PaymentCardDto cardDto) {
 
-    log.info("Updating card with ID: {}", id);
     PaymentCard card = cardMapper.cardDtoToCard(cardDto);
     PaymentCard updatedCard = cardService.updateCard(id, card);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(updatedCard);
-    log.info("Card updated successfully with ID: {}", id);
     return ResponseEntity.ok(responseDto);
   }
 
@@ -135,56 +106,37 @@ public class CardController {
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
-  @DeleteMapping("/{id}")
+  @DeleteMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<Void> deleteCard(
       @Parameter(description = "ID of the card to delete", required = true) @PathVariable("id")
           Long id) {
 
-    log.info("Deleting card with ID: {}", id);
     cardService.deleteCard(id);
-    log.info("Card deleted successfully with ID: {}", id);
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "Activate card", description = "Activates a payment card by its ID")
+  @Operation(summary = "Update card status", description = "Updates card active status by ID")
   @ApiResponse(
       responseCode = "200",
-      description = "Card activated successfully",
+      description = "Card status updated successfully",
       content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "Invalid status data",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @ApiResponse(
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
-  @PatchMapping("/{id}/activate")
-  public ResponseEntity<PaymentCardDto> activateCard(
-      @Parameter(description = "ID of the card to activate", required = true) @PathVariable("id")
-          Long id) {
+  @PatchMapping(ApiConstant.CARD_ID_PATH)
+  public ResponseEntity<PaymentCardDto> updateCardStatus(
+      @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")
+          Long id,
+      @Parameter(description = "Status update data", required = true) @Valid @RequestBody
+          StatusUpdateDto statusUpdateDto) {
 
-    log.info("Activating card with ID: {}", id);
-    PaymentCard activatedCard = cardService.activateCard(id);
-    PaymentCardDto responseDto = cardMapper.cardToCardDto(activatedCard);
-    log.info("Card activated successfully with ID: {}", id);
-    return ResponseEntity.ok(responseDto);
-  }
-
-  @Operation(summary = "Deactivate card", description = "Deactivates a payment card by its ID")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Card deactivated successfully",
-      content = @Content(schema = @Schema(implementation = PaymentCardDto.class)))
-  @ApiResponse(
-      responseCode = "404",
-      description = "Card not found",
-      content = @Content(schema = @Schema(implementation = String.class)))
-  @PatchMapping("/{id}/deactivate")
-  public ResponseEntity<PaymentCardDto> deactivateCard(
-      @Parameter(description = "ID of the card to deactivate", required = true) @PathVariable("id")
-          Long id) {
-
-    log.info("Deactivating card with ID: {}", id);
-    PaymentCard deactivatedCard = cardService.deactivateCard(id);
-    PaymentCardDto responseDto = cardMapper.cardToCardDto(deactivatedCard);
-    log.info("Card deactivated successfully with ID: {}", id);
+    PaymentCard updatedCard = cardService.updateCardStatus(id, statusUpdateDto.getActive());
+    PaymentCardDto responseDto = cardMapper.cardToCardDto(updatedCard);
     return ResponseEntity.ok(responseDto);
   }
 }

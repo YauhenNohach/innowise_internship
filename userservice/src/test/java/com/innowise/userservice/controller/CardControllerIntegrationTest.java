@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.userservice.BaseIntegrationTest;
 import com.innowise.userservice.model.dto.PaymentCardDto;
+import com.innowise.userservice.model.dto.StatusUpdateDto;
 import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
@@ -151,15 +152,31 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  void activateCard_shouldReturnOk() throws Exception {
-    mockMvc.perform(patch("/api/v1/cards/{id}/activate", card.getId())).andExpect(status().isOk());
+  void updateCardStatus_activateCard_shouldReturnOk() throws Exception {
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(true);
+
+    mockMvc
+        .perform(
+            patch("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.active").value(true));
   }
 
   @Test
-  void deactivateCard_shouldReturnOk() throws Exception {
+  void updateCardStatus_deactivateCard_shouldReturnOk() throws Exception {
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(false);
+
     mockMvc
-        .perform(patch("/api/v1/cards/{id}/deactivate", card.getId()))
-        .andExpect(status().isOk());
+        .perform(
+            patch("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.active").value(false));
   }
 
   @Test

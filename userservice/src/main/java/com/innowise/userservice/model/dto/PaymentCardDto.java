@@ -16,6 +16,9 @@ import lombok.Setter;
 @Schema(description = "DTO for transferring payment card data")
 public class PaymentCardDto {
 
+  @Schema(description = "Payment card id", example = "12")
+  private Long id;
+
   @Schema(
       description = "Payment card number (16 digits)",
       example = "1234567890123456",

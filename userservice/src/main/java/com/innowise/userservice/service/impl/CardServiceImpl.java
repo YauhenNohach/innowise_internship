@@ -10,7 +10,6 @@ import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
 import com.innowise.userservice.repository.specification.CardSpecification;
 import com.innowise.userservice.service.CardService;
-import jakarta.transaction.Transactional;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,16 +52,13 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PaymentCard getCardById(Long id) {
     return cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException(id));
   }
 
   @Override
-  public List<PaymentCard> getAllCards() {
-    return cardRepository.findAll();
-  }
-
-  @Override
+  @Transactional(readOnly = true)
   public Page<PaymentCard> getAllCards(
       String holder, String number, Boolean active, Pageable pageable) {
     Specification<PaymentCard> spec =
@@ -72,6 +69,7 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public List<PaymentCard> getCardsByUserId(Long userId) {
     if (!userRepository.existsById(userId)) {
       throw new UserNotFoundException(userId);
@@ -80,6 +78,7 @@ public class CardServiceImpl implements CardService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<PaymentCard> getCardsByUserId(Long userId, Pageable pageable) {
     if (!userRepository.existsById(userId)) {
       throw new UserNotFoundException(userId);
@@ -109,20 +108,22 @@ public class CardServiceImpl implements CardService {
 
   @Override
   @CacheEvict(value = "userWithCards", key = "#result.user.id")
-  public PaymentCard activateCard(Long id) {
+  public PaymentCard updateCardStatus(Long id, Boolean active) {
     PaymentCard card = getCardById(id);
-    cardRepository.updateCardStatus(id, true);
-    card.setActive(true);
-    return card;
+    card.setActive(active);
+    return cardRepository.save(card);
   }
 
   @Override
   @CacheEvict(value = "userWithCards", key = "#result.user.id")
-  public PaymentCard deactivateCard(Long id) {
-    PaymentCard card = getCardById(id);
-    cardRepository.updateCardStatus(id, false);
-    card.setActive(false);
-    return card;
+  public void activateCard(Long id) {
+    updateCardStatus(id, true);
+  }
+
+  @Override
+  @CacheEvict(value = "userWithCards", key = "#result.user.id")
+  public void deactivateCard(Long id) {
+    updateCardStatus(id, false);
   }
 
   @Override
