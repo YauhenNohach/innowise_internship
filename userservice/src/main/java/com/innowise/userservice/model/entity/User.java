@@ -49,7 +49,7 @@ public class User extends BaseAuditEntity implements Serializable {
   private String email;
 
   @Column(nullable = false)
-  private boolean active = true;
+  private boolean active;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PaymentCard> cards;

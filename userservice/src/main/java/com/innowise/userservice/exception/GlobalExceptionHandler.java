@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -93,5 +95,59 @@ public class GlobalExceptionHandler {
             "An unexpected error occurred",
             LocalDateTime.now());
     return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+      DataIntegrityViolationException ex) {
+
+    ex.getMostSpecificCause();
+    if (ex.getMostSpecificCause().getMessage().contains("_number_key")) {
+
+      return ResponseEntity.status(HttpStatus.CONFLICT)
+          .body(
+              new ErrorResponse(
+                  HttpStatus.CONFLICT.value(),
+                  "Conflict",
+                  "Card number already exists",
+                  LocalDateTime.now()));
+    }
+
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(
+            new ErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "DATABASE_ERROR",
+                LocalDateTime.now()));
+  }
+
+  @ExceptionHandler(CardExpiredException.class)
+  public ResponseEntity<ErrorResponse> handleCardExpired() {
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "Card expired",
+                LocalDateTime.now()));
+  }
+
+  @ExceptionHandler(PropertyReferenceException.class)
+  public ResponseEntity<ErrorResponse> handlePropertyReferenceException(
+      PropertyReferenceException ex) {
+
+    String field = ex.getPropertyName();
+    String message =
+        "Invalid sort/filter field '" + field + "'. Please use valid fields for PaymentCard.";
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid Request Parameter",
+                message,
+                LocalDateTime.now()));
   }
 }

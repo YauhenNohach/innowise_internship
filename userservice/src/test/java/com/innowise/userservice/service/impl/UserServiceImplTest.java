@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -163,16 +162,16 @@ class UserServiceImplTest {
     updatedUser.setEmail("new@mail.ru");
 
     when(userRepository.findById(anyLong())).thenReturn(Optional.of(existingUser));
-    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-    when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+    when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     User result = userService.updateUser(1L, updatedUser);
 
     assertNotNull(result);
-    assertEquals(updatedUser.getEmail(), result.getEmail());
-    verify(userRepository, times(1)).findById(anyLong());
-    verify(userRepository, times(1)).findByEmail(anyString());
-    verify(userRepository, times(1)).save(any(User.class));
+    assertEquals("new@mail.ru", result.getEmail());
+
+    verify(userRepository, times(1)).findById(1L);
+    verify(userRepository, times(1)).save(existingUser);
+    verify(userRepository, never()).findByEmail(anyString());
   }
 
   @Test
@@ -189,35 +188,74 @@ class UserServiceImplTest {
   }
 
   @Test
-  void updateUser_whenEmailExists_shouldThrowException() {
-    User existingUser = new User();
-    existingUser.setId(1L);
-    existingUser.setEmail("old@mail.ru");
+  void updateUserStatus_activateUser_shouldReturnUpdatedUser() {
+    User user = new User();
+    user.setId(1L);
+    user.setActive(false);
 
-    User updatedUser = new User();
-    updatedUser.setEmail("new@mail.ru");
+    when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    when(userRepository.save(any(User.class))).thenReturn(user);
 
-    when(userRepository.findById(anyLong())).thenReturn(Optional.of(existingUser));
-    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+    User result = userService.updateUserStatus(1L, true);
 
-    assertThrows(UserAlreadyExistsException.class, () -> userService.updateUser(1L, updatedUser));
+    assertNotNull(result);
     verify(userRepository, times(1)).findById(anyLong());
-    verify(userRepository, times(1)).findByEmail(anyString());
+    verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void updateUserStatus_deactivateUser_shouldReturnUpdatedUser() {
+    User user = new User();
+    user.setId(1L);
+    user.setActive(true);
+
+    when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    when(userRepository.save(any(User.class))).thenReturn(user);
+
+    User result = userService.updateUserStatus(1L, false);
+
+    assertNotNull(result);
+    verify(userRepository, times(1)).findById(anyLong());
+    verify(userRepository, times(1)).save(user);
+  }
+
+  @Test
+  void updateUserStatus_whenUserDoesNotExist_shouldThrowException() {
+    when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThrows(UserNotFoundException.class, () -> userService.updateUserStatus(1L, true));
+    verify(userRepository, times(1)).findById(anyLong());
     verify(userRepository, never()).save(any(User.class));
   }
 
   @Test
   void activateUser_shouldCallRepository() {
-    doNothing().when(userRepository).updateUserStatus(anyLong(), eq(true));
+    User user = new User();
+    user.setId(1L);
+    user.setActive(false);
+
+    when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    when(userRepository.save(any(User.class))).thenReturn(user);
+
     userService.activateUser(1L);
-    verify(userRepository, times(1)).updateUserStatus(1L, true);
+
+    verify(userRepository, times(1)).findById(anyLong());
+    verify(userRepository, times(1)).save(user);
   }
 
   @Test
   void deactivateUser_shouldCallRepository() {
-    doNothing().when(userRepository).updateUserStatus(anyLong(), eq(false));
+    User user = new User();
+    user.setId(1L);
+    user.setActive(true);
+
+    when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+    when(userRepository.save(any(User.class))).thenReturn(user);
+
     userService.deactivateUser(1L);
-    verify(userRepository, times(1)).updateUserStatus(1L, false);
+
+    verify(userRepository, times(1)).findById(anyLong());
+    verify(userRepository, times(1)).save(user);
   }
 
   @Test

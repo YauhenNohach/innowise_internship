@@ -1,11 +1,10 @@
 package com.innowise.userservice.controller;
 
-import com.innowise.userservice.constant.ApiConstant;
 import com.innowise.userservice.mapper.PaymentCardMapper;
 import com.innowise.userservice.mapper.UserMapper;
 import com.innowise.userservice.model.dto.PaymentCardDto;
+import com.innowise.userservice.model.dto.StatusUpdateDto;
 import com.innowise.userservice.model.dto.UserDto;
-import com.innowise.userservice.model.dto.UserWithCardsDto;
 import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.service.CardService;
@@ -65,11 +64,9 @@ public class UserController {
       content = @Content(schema = @Schema(implementation = String.class)))
   @PostMapping
   public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
-    log.info("Creating user with email: {}", userDto.getEmail());
     User user = userMapper.userDtoToUser(userDto);
     User createdUser = userService.createUser(user);
     UserDto responseDto = userMapper.userToUserDto(createdUser);
-    log.info("User created successfully with ID: {}", createdUser.getId());
     return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
   }
 
@@ -77,7 +74,7 @@ public class UserController {
   @ApiResponse(
       responseCode = "200",
       description = "User found",
-      content = @Content(schema = @Schema(implementation = UserWithCardsDto.class)))
+      content = @Content(schema = @Schema(implementation = UserDto.class)))
   @ApiResponse(
       responseCode = "404",
       description = "User not found",
@@ -85,14 +82,13 @@ public class UserController {
   @PreAuthorize(
       "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#id, authentication)")
   @GetMapping(ApiConstant.USER_ID_PATH)
-  public ResponseEntity<UserWithCardsDto> getUserById(
+  public ResponseEntity<UserDto> getUserById(
       @Parameter(description = "ID of the user to retrieve", required = true) @PathVariable("id")
           Long id) {
 
-    log.info("Fetching user with ID: {}", id);
-    UserWithCardsDto user = userService.getUserWithCardsById(id);
-    log.info("User fetched successfully with ID: {}", id);
-    return ResponseEntity.ok(user);
+    User user = userService.getUserById(id);
+    UserDto userDto = userMapper.userToUserDto(user);
+    return ResponseEntity.ok(userDto);
   }
 
   @Operation(summary = "Get all users", description = "Returns paginated list of users")
@@ -105,22 +101,10 @@ public class UserController {
   public ResponseEntity<Page<UserDto>> getAllUsers(
       @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
       @Parameter(description = "Filter by surname") @RequestParam(required = false) String surname,
-      @Parameter(description = "Filter by email") @RequestParam(required = false) String email,
-      @Parameter(description = "Filter by active status") @RequestParam(required = false)
-          Boolean active,
       @Parameter(description = "Pagination parameters") @ParameterObject Pageable pageable) {
-
-    log.info(
-        "Fetching users with filters - name: {}, surname: {}, email: {}, active: {}",
-        name,
-        surname,
-        email,
-        active);
 
     Page<User> users = userService.getAllUsers(name, surname, pageable);
     Page<UserDto> userDtos = users.map(userMapper::userToUserDto);
-    log.info("Found {} users", users.getTotalElements());
-
     return ResponseEntity.ok(userDtos);
   }
 
@@ -146,11 +130,9 @@ public class UserController {
       @Parameter(description = "Updated user data", required = true) @Valid @RequestBody
           UserDto userDto) {
 
-    log.info("Updating user with ID: {}", id);
     User user = userMapper.userDtoToUser(userDto);
     User updatedUser = userService.updateUser(id, user);
     UserDto responseDto = userMapper.userToUserDto(updatedUser);
-    log.info("User updated successfully with ID: {}", id);
     return ResponseEntity.ok(responseDto);
   }
 
@@ -179,11 +161,9 @@ public class UserController {
       @Parameter(description = "Card data", required = true) @Valid @RequestBody
           PaymentCardDto cardDto) {
 
-    log.info("Creating card for user ID: {}", userId);
     PaymentCard card = cardMapper.cardDtoToCard(cardDto);
     PaymentCard createdCard = cardService.createCard(card, userId);
     PaymentCardDto responseDto = cardMapper.cardToCardDto(createdCard);
-    log.info("Card created successfully with number: {}", responseDto.getNumber());
     return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
   }
 
@@ -207,10 +187,8 @@ public class UserController {
           @PathVariable("userId")
           Long userId) {
 
-    log.info("Fetching cards for user ID: {}", userId);
     List<PaymentCard> cards = cardService.getCardsByUserId(userId);
     List<PaymentCardDto> responseDtos = cards.stream().map(cardMapper::cardToCardDto).toList();
-    log.info("Found {} cards for user ID: {}", responseDtos.size(), userId);
     return ResponseEntity.ok(responseDtos);
   }
 
@@ -220,62 +198,38 @@ public class UserController {
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
-  @PreAuthorize(
-      "@authorizationService.hasAdminRole(authentication)  or @authorizationService.isSelf(#id, authentication)")
   @DeleteMapping(ApiConstant.USER_ID_PATH)
   public ResponseEntity<Void> deleteUser(
       @Parameter(description = "ID of the user to delete", required = true) @PathVariable("id")
           Long id) {
 
-    log.info("Deleting user with ID: {}", id);
     userService.deleteUser(id);
-    log.info("User deleted successfully with ID: {}", id);
     return ResponseEntity.noContent().build();
   }
 
-  @Operation(summary = "Activate user", description = "Activates user account by ID")
+  @Operation(summary = "Update user status", description = "Updates user active status by ID")
   @ApiResponse(
       responseCode = "200",
-      description = "User activated successfully",
+      description = "User status updated successfully",
       content = @Content(schema = @Schema(implementation = UserDto.class)))
+  @ApiResponse(
+      responseCode = "400",
+      description = "Invalid status data",
+      content = @Content(schema = @Schema(implementation = String.class)))
   @ApiResponse(
       responseCode = "404",
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PatchMapping(ApiConstant.USER_ID_PATH)
   @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
-  @PatchMapping(ApiConstant.ACTIVATE_USER)
-  public ResponseEntity<UserDto> activateUser(
-      @Parameter(description = "ID of the user to activate", required = true) @PathVariable("id")
-          Long id) {
+  public ResponseEntity<UserDto> updateUserStatus(
+      @Parameter(description = "ID of the user to update", required = true) @PathVariable("id")
+          Long id,
+      @Parameter(description = "Status update data", required = true) @Valid @RequestBody
+          StatusUpdateDto statusUpdateDto) {
 
-    log.info("Activating user with ID: {}", id);
-    userService.activateUser(id);
-    User user = userService.getUserById(id);
-    UserDto responseDto = userMapper.userToUserDto(user);
-    log.info("User activated successfully with ID: {}", id);
-    return ResponseEntity.ok(responseDto);
-  }
-
-  @Operation(summary = "Deactivate user", description = "Deactivates user account by ID")
-  @ApiResponse(
-      responseCode = "200",
-      description = "User deactivated successfully",
-      content = @Content(schema = @Schema(implementation = UserDto.class)))
-  @ApiResponse(
-      responseCode = "404",
-      description = "User not found",
-      content = @Content(schema = @Schema(implementation = String.class)))
-  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
-  @PatchMapping(ApiConstant.DEACTIVATE_USER)
-  public ResponseEntity<UserDto> deactivateUser(
-      @Parameter(description = "ID of the user to deactivate", required = true) @PathVariable("id")
-          Long id) {
-
-    log.info("Deactivating user with ID: {}", id);
-    userService.deactivateUser(id);
-    User user = userService.getUserById(id);
-    UserDto responseDto = userMapper.userToUserDto(user);
-    log.info("User deactivated successfully with ID: {}", id);
+    User updatedUser = userService.updateUserStatus(id, statusUpdateDto.getActive());
+    UserDto responseDto = userMapper.userToUserDto(updatedUser);
     return ResponseEntity.ok(responseDto);
   }
 }

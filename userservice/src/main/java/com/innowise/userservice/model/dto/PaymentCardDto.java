@@ -16,7 +16,7 @@ import lombok.Setter;
 @Schema(description = "DTO for transferring payment card data")
 public class PaymentCardDto {
 
-  @Schema(description = "Unique identifier of the payment card", example = "1")
+  @Schema(description = "Payment card id", example = "12")
   private Long id;
 
   @Schema(
@@ -29,7 +29,7 @@ public class PaymentCardDto {
 
   @Schema(
       description = "Card holder name",
-      example = "IVAN IVANOV",
+      example = "Yauhen Nohach",
       requiredMode = Schema.RequiredMode.REQUIRED)
   @NotBlank(message = "Card holder name is required")
   private String holder;

@@ -1,17 +1,20 @@
-package com.innowise.userservice.constant;
+package com.innowise.userservice.controller;
 
-public final class ApiConstant {
-  private ApiConstant() {}
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
+public class ApiConstant {
 
   public static final String API_V1 = "/api/v1";
   public static final String USERS = "/users";
   public static final String CARDS = "/cards";
+
   public static final String USERS_BASE = API_V1 + USERS;
   public static final String CARDS_BASE = API_V1 + CARDS;
 
-  public static final String USER_ID_PATH = "/{id}";
-  public static final String ACTIVATE_USER = "/{id}/activate";
-  public static final String DEACTIVATE_USER = "/{id}/deactivate";
+  public static final String ID_PATH = "/{id}";
+  public static final String USER_ID_PATH = ID_PATH;
+  public static final String CARD_ID_PATH = ID_PATH;
 
   public static final String USER_CARDS_OPERATIONS = "/{userId}/cards";
 }

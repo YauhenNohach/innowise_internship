@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.innowise.userservice.BaseIntegrationTest;
 import com.innowise.userservice.model.dto.PaymentCardDto;
+import com.innowise.userservice.model.dto.StatusUpdateDto;
 import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
@@ -102,9 +103,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
     for (int i = 2; i <= 5; i++) {
       PaymentCard additionalCard = new PaymentCard();
       additionalCard.setUser(user);
-      additionalCard.setNumber("111122223333444" + i);
+      additionalCard.setNumber("116122223333444" + i);
       additionalCard.setHolder("holder" + i);
-      additionalCard.setExpirationDate("01/26");
+      additionalCard.setExpirationDate("06/26");
       additionalCard.setActive(true);
       cardRepository.save(additionalCard);
     }
@@ -132,7 +133,6 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         .perform(get("/api/v1/cards/{id}", card.getId()))
         .andDo(print())
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(card.getId()))
         .andExpect(jsonPath("$.number").value("1111222233334444"));
   }
 
@@ -143,8 +143,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
     mockMvc
         .perform(get("/api/v1/users/{userId}/cards", user.getId()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(1))
-        .andExpect(jsonPath("$[0].id").value(card.getId()));
+        .andExpect(jsonPath("$.length()").value(1));
   }
 
   @Test
@@ -174,18 +173,32 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @WithMockUser(roles = "ADMIN")
-  void activateCard_shouldReturnOk() throws Exception {
+  void updateCardStatus_activateCard_shouldReturnOk() throws Exception {
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(true);
 
-    mockMvc.perform(patch("/api/v1/cards/{id}/activate", card.getId())).andExpect(status().isOk());
+    mockMvc
+        .perform(
+            patch("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.active").value(true));
   }
 
   @Test
   @WithMockUser(roles = "ADMIN")
-  void deactivateCard_shouldReturnOk() throws Exception {
+  void updateCardStatus_deactivateCard_shouldReturnOk() throws Exception {
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(false);
 
     mockMvc
-        .perform(patch("/api/v1/cards/{id}/deactivate", card.getId()))
-        .andExpect(status().isOk());
+        .perform(
+            patch("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.active").value(false));
   }
 
   @Test

@@ -1,11 +1,12 @@
 package com.innowise.userservice.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -45,18 +46,20 @@ class CardServiceImplTest {
   void createCard_whenUserExistsAndCardLimitNotExceeded_shouldReturnCard() {
     User user = new User();
     user.setId(1L);
+
     PaymentCard card = new PaymentCard();
+    card.setExpirationDate("12/30");
 
     when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
     when(cardRepository.countActiveCardsByUserId(anyLong())).thenReturn(4);
     when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
-    PaymentCard createdCard = cardService.createCard(card, 1L);
+    PaymentCard result = cardService.createCard(card, 1L);
 
-    assertNotNull(createdCard);
-    verify(userRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).countActiveCardsByUserId(anyLong());
-    verify(cardRepository, times(1)).save(any(PaymentCard.class));
+    assertNotNull(result);
+    verify(userRepository).findById(1L);
+    verify(cardRepository).countActiveCardsByUserId(1L);
+    verify(cardRepository).save(card);
   }
 
   @Test
@@ -75,15 +78,18 @@ class CardServiceImplTest {
   void createCard_whenCardLimitExceeded_shouldThrowException() {
     User user = new User();
     user.setId(1L);
+
     PaymentCard card = new PaymentCard();
+    card.setExpirationDate("12/30");
 
     when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
     when(cardRepository.countActiveCardsByUserId(anyLong())).thenReturn(5);
 
     assertThrows(MaxCardsLimitException.class, () -> cardService.createCard(card, 1L));
-    verify(userRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).countActiveCardsByUserId(anyLong());
-    verify(cardRepository, never()).save(any(PaymentCard.class));
+
+    verify(userRepository).findById(1L);
+    verify(cardRepository).countActiveCardsByUserId(1L);
+    verify(cardRepository, never()).save(any());
   }
 
   @Test
@@ -165,11 +171,12 @@ class CardServiceImplTest {
   void updateCard_whenCardExists_shouldReturnUpdatedCard() {
     PaymentCard existingCard = new PaymentCard();
     existingCard.setId(1L);
+    existingCard.setNumber("1111");
     PaymentCard updatedCard = new PaymentCard();
     updatedCard.setNumber("1234");
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(existingCard));
-    when(cardRepository.save(any(PaymentCard.class))).thenReturn(updatedCard);
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(existingCard);
 
     PaymentCard result = cardService.updateCard(1L, updatedCard);
 
@@ -190,6 +197,53 @@ class CardServiceImplTest {
   }
 
   @Test
+  void updateCardStatus_activateCard_shouldReturnUpdatedCard() {
+    User user = new User();
+    user.setId(1L);
+    PaymentCard card = new PaymentCard();
+    card.setUser(user);
+    card.setActive(false);
+
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
+
+    PaymentCard result = cardService.updateCardStatus(1L, true);
+
+    assertNotNull(result);
+    assertTrue(result.isActive());
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, times(1)).save(card);
+  }
+
+  @Test
+  void updateCardStatus_deactivateCard_shouldReturnUpdatedCard() {
+    User user = new User();
+    user.setId(1L);
+    PaymentCard card = new PaymentCard();
+    card.setUser(user);
+    card.setActive(true);
+
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
+
+    PaymentCard result = cardService.updateCardStatus(1L, false);
+
+    assertNotNull(result);
+    assertFalse(result.isActive());
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, times(1)).save(card);
+  }
+
+  @Test
+  void updateCardStatus_whenCardDoesNotExist_shouldThrowException() {
+    when(cardRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+    assertThrows(CardNotFoundException.class, () -> cardService.updateCardStatus(1L, true));
+    verify(cardRepository, times(1)).findById(anyLong());
+    verify(cardRepository, never()).save(any(PaymentCard.class));
+  }
+
+  @Test
   void activateCard_shouldCallRepository() {
     User user = new User();
     user.setId(1L);
@@ -197,12 +251,12 @@ class CardServiceImplTest {
     card.setUser(user);
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
-    doNothing().when(cardRepository).updateCardStatus(anyLong(), eq(true));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
     cardService.activateCard(1L);
 
     verify(cardRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).updateCardStatus(1L, true);
+    verify(cardRepository, times(1)).save(card);
   }
 
   @Test
@@ -213,12 +267,12 @@ class CardServiceImplTest {
     card.setUser(user);
 
     when(cardRepository.findById(anyLong())).thenReturn(Optional.of(card));
-    doNothing().when(cardRepository).updateCardStatus(anyLong(), eq(false));
+    when(cardRepository.save(any(PaymentCard.class))).thenReturn(card);
 
     cardService.deactivateCard(1L);
 
     verify(cardRepository, times(1)).findById(anyLong());
-    verify(cardRepository, times(1)).updateCardStatus(1L, false);
+    verify(cardRepository, times(1)).save(card);
   }
 
   @Test
