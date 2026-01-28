@@ -141,6 +141,7 @@ public class CardController {
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @PatchMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<PaymentCardDto> updateCardStatus(
       @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")

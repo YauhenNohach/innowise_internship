@@ -1,6 +1,7 @@
 package com.innowise.userservice.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -216,6 +217,26 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(username = "other@mail.ru")
+  void updateUser_whenUserIsNotSelf_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+    when(authorizationService.isSelf(eq(user.getId()), any())).thenReturn(false);
+
+    UserDto userDto = new UserDto();
+    userDto.setName("unauthorized");
+    userDto.setSurname("unauthorized");
+    userDto.setEmail("test@mail.ru");
+    userDto.setBirthDate(LocalDate.of(2000, 1, 1));
+
+    mockMvc
+        .perform(
+            put("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userDto)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
   @WithMockUser(roles = "ADMIN")
   void updateUserStatus_withInvalidData_shouldReturnBadRequest() throws Exception {
     String invalidJson = "{}";
@@ -226,5 +247,82 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidJson))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @WithMockUser(username = "other@mail.ru")
+  void deleteUser_whenUserIsNotSelf_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+    when(authorizationService.isSelf(eq(user.getId()), any())).thenReturn(false);
+
+    mockMvc.perform(delete("/api/v1/users/{id}", user.getId())).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void updateUserStatus_whenUserIsSelf_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(false);
+
+    mockMvc
+        .perform(
+            patch("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void getAllUsers_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void getUserById_whenUserIsSelf_shouldReturnUser() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+    when(authorizationService.isSelf(eq(user.getId()), any())).thenReturn(true);
+
+    mockMvc
+        .perform(get("/api/v1/users/{id}", user.getId()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(user.getId()));
+  }
+
+  @Test
+  @WithMockUser(username = "other@mail.ru")
+  void getUserById_whenUserIsNotSelf_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+    when(authorizationService.isSelf(eq(user.getId()), any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/users/{id}", user.getId())).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void updateUser_whenUserIsSelf_shouldReturnOk() throws Exception {
+
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+    when(authorizationService.isSelf(eq(user.getId()), any())).thenReturn(true);
+
+    UserDto userDto = new UserDto();
+    userDto.setName("selfUpdated");
+    userDto.setSurname("selfUpdated");
+    userDto.setEmail("test@mail.ru");
+    userDto.setBirthDate(LocalDate.of(2000, 1, 1));
+    userDto.setActive(true);
+
+    mockMvc
+        .perform(
+            put("/api/v1/users/{id}", user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userDto)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("selfUpdated"));
   }
 }

@@ -153,7 +153,7 @@ public class UserController {
       content = @Content(schema = @Schema(implementation = String.class)))
   @PostMapping(ApiConstant.USER_CARDS_OPERATIONS)
   @PreAuthorize(
-      "@authorizationService.hasAdminRole(authentication) or @cardServiceImpl.isCardOwner(#userId, authentication.name)")
+      "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#userId, authentication)")
   public ResponseEntity<PaymentCardDto> createCard(
       @Parameter(description = "ID of the user to create a card for", required = true)
           @PathVariable("userId")
@@ -181,7 +181,7 @@ public class UserController {
       content = @Content(schema = @Schema(implementation = String.class)))
   @GetMapping(ApiConstant.USER_CARDS_OPERATIONS)
   @PreAuthorize(
-      "@authorizationService.hasAdminRole(authentication) or @cardServiceImpl.isCardOwner(#userId, authentication.name)")
+      "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#userId, authentication)")
   public ResponseEntity<List<PaymentCardDto>> getCardsByUserId(
       @Parameter(description = "ID of the user to retrieve cards for", required = true)
           @PathVariable("userId")
@@ -199,6 +199,8 @@ public class UserController {
       description = "User not found",
       content = @Content(schema = @Schema(implementation = String.class)))
   @DeleteMapping(ApiConstant.USER_ID_PATH)
+  @PreAuthorize(
+      "@authorizationService.hasAdminRole(authentication) or @authorizationService.isSelf(#id, authentication)")
   public ResponseEntity<Void> deleteUser(
       @Parameter(description = "ID of the user to delete", required = true) @PathVariable("id")
           Long id) {
