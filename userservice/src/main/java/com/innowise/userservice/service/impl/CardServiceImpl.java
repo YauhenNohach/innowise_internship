@@ -135,5 +135,4 @@ public class CardServiceImpl implements CardService {
     log.debug("Deleting card with id: {} for user: {}", id, userId);
     cardRepository.deleteById(id);
   }
-
 }
