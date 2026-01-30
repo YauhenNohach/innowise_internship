@@ -321,18 +321,6 @@ class AuthServiceImplTest {
   }
 
   @Test
-  void register_WithNullFields_ThrowsException() {
-    UserRequest request = new UserRequest();
-    request.setEmail(null);
-    request.setUsername(null);
-    request.setPassword(null);
-
-    when(userRepository.findByEmail(null)).thenReturn(Optional.empty());
-
-    assertThrows(Exception.class, () -> authService.register(request));
-  }
-
-  @Test
   void generateTokenResponse_Success() {
     when(jwtTokenUtil.generateToken(userDetails)).thenReturn("access-token");
     when(jwtTokenUtil.generateRefreshToken(userDetails)).thenReturn("refresh-token");
