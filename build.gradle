@@ -77,6 +77,10 @@ task jacocoRootReport(type: JacocoReport) {
                     '**/com/innowise/**/config/**',
                     '**/com/innowise/**/dto/**',
                     '**/com/innowise/**/model/**',
+                    '**/com/innowise/**/util/**',
+                    '**/com/innowise/**/exception/**',
+                    '**/com/innowise/**/repository/**',
+                    '**/com/innowise/**/mapper/**',
                     '**/*Application.*'
             ])
         }))
@@ -89,8 +93,11 @@ sonarqube {
                 "**/dto/**",
                 "**/model/**",
                 "**/config/**",
+                '**/util/**',
                 "**/*Application.java",
-                "**/exception/**"
+                "**/exception/**",
+                "**/repository/**",
+                "**/mapper/**"
         ].join(",")
     }
 }

@@ -18,7 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(ApiConstant.CARDS_BASE)
@@ -43,6 +52,7 @@ public class CardController {
       description = "Cards not found",
       content =
           @Content(mediaType = "application/json", schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @GetMapping
   public ResponseEntity<Page<PaymentCardDto>> getAllCardsWithFilters(
       @RequestParam(required = false) String holder,
@@ -64,6 +74,7 @@ public class CardController {
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @GetMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<PaymentCardDto> getCardById(
       @Parameter(description = "ID of the card to retrieve", required = true) @PathVariable("id")
@@ -88,6 +99,7 @@ public class CardController {
       description = "Invalid card data",
       content = @Content(schema = @Schema(implementation = String.class)))
   @PutMapping(ApiConstant.CARD_ID_PATH)
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   public ResponseEntity<PaymentCardDto> updateCard(
       @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")
           Long id,
@@ -107,6 +119,7 @@ public class CardController {
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
   @DeleteMapping(ApiConstant.CARD_ID_PATH)
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   public ResponseEntity<Void> deleteCard(
       @Parameter(description = "ID of the card to delete", required = true) @PathVariable("id")
           Long id) {
@@ -128,6 +141,7 @@ public class CardController {
       responseCode = "404",
       description = "Card not found",
       content = @Content(schema = @Schema(implementation = String.class)))
+  @PreAuthorize("@authorizationService.hasAdminRole(authentication)")
   @PatchMapping(ApiConstant.CARD_ID_PATH)
   public ResponseEntity<PaymentCardDto> updateCardStatus(
       @Parameter(description = "ID of the card to update", required = true) @PathVariable("id")

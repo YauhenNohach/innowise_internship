@@ -1,5 +1,7 @@
 package com.innowise.userservice.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -17,6 +19,7 @@ import com.innowise.userservice.model.entity.PaymentCard;
 import com.innowise.userservice.model.entity.User;
 import com.innowise.userservice.repository.PaymentCardRepository;
 import com.innowise.userservice.repository.UserRepository;
+import com.innowise.userservice.service.AuthorizationService;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +27,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -40,6 +45,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   @Autowired private PaymentCardRepository cardRepository;
 
   @Autowired private ObjectMapper objectMapper;
+
+  @MockBean(name = "authorizationService")
+  private AuthorizationService authorizationService;
 
   private User user;
   private PaymentCard card;
@@ -59,6 +67,8 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
     card.setHolder("test test");
     card.setExpirationDate("1/26");
     card = cardRepository.save(card);
+
+    when(authorizationService.hasAdminRole(any())).thenReturn(true);
   }
 
   @AfterEach
@@ -68,6 +78,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void createCard_whenValidCard_shouldReturnCreated() throws Exception {
     PaymentCardDto cardDto = new PaymentCardDto();
     cardDto.setNumber("5555666677778888");
@@ -86,7 +97,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void createCard_whenUserAlreadyHas5Cards_shouldReturnBadRequest() throws Exception {
+
     for (int i = 2; i <= 5; i++) {
       PaymentCard additionalCard = new PaymentCard();
       additionalCard.setUser(user);
@@ -113,7 +126,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getCardById_whenCardExists_shouldReturnCard() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards/{id}", card.getId()))
         .andDo(print())
@@ -122,7 +137,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getCardsByUserId_shouldReturnListOfCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/users/{userId}/cards", user.getId()))
         .andExpect(status().isOk())
@@ -130,6 +147,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void updateCard_whenValidUpdate_shouldReturnOk() throws Exception {
     PaymentCardDto cardDto = new PaymentCardDto();
     cardDto.setHolder("test test");
@@ -147,11 +165,14 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void deleteCard_shouldReturnNoContent() throws Exception {
+
     mockMvc.perform(delete("/api/v1/cards/{id}", card.getId())).andExpect(status().isNoContent());
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void updateCardStatus_activateCard_shouldReturnOk() throws Exception {
     StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
     statusUpdateDto.setActive(true);
@@ -166,6 +187,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void updateCardStatus_deactivateCard_shouldReturnOk() throws Exception {
     StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
     statusUpdateDto.setActive(false);
@@ -180,7 +202,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("holder", "test"))
         .andExpect(status().isOk())
@@ -189,7 +213,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_byNumber_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("number", "4444"))
         .andExpect(status().isOk())
@@ -197,7 +223,9 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithFilters_byActiveStatus_shouldReturnFilteredCards() throws Exception {
+
     mockMvc
         .perform(get("/api/v1/cards").param("active", "true"))
         .andExpect(status().isOk())
@@ -206,6 +234,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   void getAllCardsWithPagination_shouldReturnPagedResults() throws Exception {
     for (int i = 2; i <= 3; i++) {
       User additionalUser = new User();
@@ -229,5 +258,131 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         .andExpect(jsonPath("$.content.length()").value(2))
         .andExpect(jsonPath("$.totalElements").value(3))
         .andExpect(jsonPath("$.numberOfElements").value(2));
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void getAllCardsWithFilters_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/cards")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void getCardById_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/cards/{id}", card.getId())).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void updateCard_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    PaymentCardDto cardDto = new PaymentCardDto();
+    cardDto.setHolder("test test");
+    cardDto.setNumber("1111222233334444");
+    cardDto.setExpirationDate("01/26");
+    cardDto.setActive(true);
+
+    mockMvc
+        .perform(
+            put("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(cardDto)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void deleteCard_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(delete("/api/v1/cards/{id}", card.getId())).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void updateCardStatus_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    StatusUpdateDto statusUpdateDto = new StatusUpdateDto();
+    statusUpdateDto.setActive(false);
+
+    mockMvc
+        .perform(
+            patch("/api/v1/cards/{id}", card.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(statusUpdateDto)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "test@mail.ru")
+  void getAllCardsWithFilters_withParameters_whenUserIsNotAdmin_shouldReturnForbidden()
+      throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc
+        .perform(
+            get("/api/v1/cards")
+                .param("holder", "test")
+                .param("number", "4444")
+                .param("active", "true"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "regular@mail.ru")
+  void getAllCardsWithFilters_withHolderFilter_whenUserIsNotAdmin_shouldReturnForbidden()
+      throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/cards").param("holder", "test")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "regular@mail.ru")
+  void getAllCardsWithFilters_withNumberFilter_whenUserIsNotAdmin_shouldReturnForbidden()
+      throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/cards").param("number", "4444")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "regular@mail.ru")
+  void getAllCardsWithFilters_withActiveFilter_whenUserIsNotAdmin_shouldReturnForbidden()
+      throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc.perform(get("/api/v1/cards").param("active", "true")).andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "regular@mail.ru")
+  void getAllCardsWithFilters_withAllFilters_whenUserIsNotAdmin_shouldReturnForbidden()
+      throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc
+        .perform(
+            get("/api/v1/cards")
+                .param("holder", "test")
+                .param("number", "4444")
+                .param("active", "true"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @WithMockUser(username = "regular@mail.ru")
+  void getAllCardsWithPagination_whenUserIsNotAdmin_shouldReturnForbidden() throws Exception {
+    when(authorizationService.hasAdminRole(any())).thenReturn(false);
+
+    mockMvc
+        .perform(get("/api/v1/cards").param("page", "0").param("size", "10"))
+        .andExpect(status().isForbidden());
   }
 }
